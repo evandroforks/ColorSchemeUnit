@@ -12,6 +12,7 @@ Install [ColorSchemeUnit](https://packagecontrol.io/packages/ColorSchemeUnit) vi
 
 ## Commands
 
+<<<<<<< HEAD
 Command | Description
 :------ |:-----------
 ColorSchemeUnit:&nbsp;Test&nbsp;Suite | Run test suite of the current file.
@@ -20,6 +21,102 @@ ColorSchemeUnit:&nbsp;Show&nbsp;Styles | Show styles at the current cursor posit
 ColorSchemeUnit:&nbsp;Generate&nbsp;Assertions | Generates assertions at the current cursor position.
 
 ## Key Bindings
+=======
+
+## Installation
+
+### By Package Control
+
+1. Download & Install **`Sublime Text 3`** (https://www.sublimetext.com/3)
+1. Go to the menu **`Tools -> Install Package Control`**, then,
+    wait few seconds until the installation finishes up
+1. Now,
+    Go to the menu **`Preferences -> Package Control`**
+1. Type **`Add Channel`** on the opened quick panel and press <kbd>Enter</kbd>
+1. Then,
+    input the following address and press <kbd>Enter</kbd>
+    ```
+    https://raw.githubusercontent.com/evandrocoan/StudioChannel/master/channel.json
+    ```
+1. Go to the menu **`Tools -> Command Palette...
+    (Ctrl+Shift+P)`**
+1. Type **`Preferences:
+    Package Control Settings – User`** on the opened quick panel and press <kbd>Enter</kbd>
+1. Then,
+    find the following setting on your **`Package Control.sublime-settings`** file:
+    ```js
+    "channels":
+    [
+        "https://packagecontrol.io/channel_v3.json",
+        "https://raw.githubusercontent.com/evandrocoan/StudioChannel/master/channel.json",
+    ],
+    ```
+1. And,
+    change it to the following, i.e.,
+    put the **`https://raw.githubusercontent...`** line as first:
+    ```js
+    "channels":
+    [
+        "https://raw.githubusercontent.com/evandrocoan/StudioChannel/master/channel.json",
+        "https://packagecontrol.io/channel_v3.json",
+    ],
+    ```
+    * The **`https://raw.githubusercontent...`** line must to be added before the **`https://packagecontrol.io...`** one, otherwise,
+      you will not install this forked version of the package,
+      but the original available on the Package Control default channel **`https://packagecontrol.io...`**
+    > [!WARNING]
+    > Placing this custom channel before the default channel changes Package Control's resolution globally.
+    > Packages from this channel with the same name will override versions from the default channel.
+    >
+    > You can review the channel contents here:
+    > https://raw.githubusercontent.com/evandrocoan/StudioChannel/master/channel.json
+1. Now,
+    go to the menu **`Preferences -> Package Control`**
+1. Type **`Install Package`** on the opened quick panel and press <kbd>Enter</kbd>
+1. Then,
+    search for **`ColorSchemeUnit`** and press <kbd>Enter</kbd>
+
+See also:
+
+1. [ITE - Integrated Toolset Environment](https://github.com/evandrocoan/ITE)
+1. [Package control docs](https://packagecontrol.io/docs/usage) for details.
+
+
+## COMMANDS
+
+*The [Test](https://github.com/gerardroche/sublime-test) plugin is recommended to unify testing commands and keymaps.*
+
+Command Palette | Command | Description
+--------------- | ------- | -----------
+`:TestSuite` | `color_scheme_unit_test_suite` | Run test suite of the current file.
+`:TestFile` | `color_scheme_unit_test_file` | Run tests for the current file.
+`:TestResults` | `color_scheme_unit_test_results` | Show the test results panel.
+`:ShowScopeAndColors` | `color_scheme_unit_show_scope_name_and_styles` | Show the scope name and applied colors of scheme at point under cursor.
+`:InsertAssertions` | `color_scheme_unit_insert_assertions` | Inserts assertions for the current line.
+`:InsertSyntaxAssertions` | `color_scheme_unit_insert_syntax_assertions` | Inserts syntax assertions for the current line.
+
+
+## KEY BINDINGS
+
+*The [Test](https://github.com/gerardroche/sublime-test) plugin is recommended to unify testing commands and keymaps.*
+
+Add your preferred key bindings:
+
+`Menu > Preferences > Key Bindings`
+
+```json
+[
+    { "keys": ["ctrl+shift+a"], "command": "color_scheme_unit_test_suite" },
+    { "keys": ["ctrl+shift+f"], "command": "color_scheme_unit_test_file" },
+    { "keys": ["ctrl+shift+r"], "command": "color_scheme_unit_test_results" },
+    { "keys": ["ctrl+shift+alt+p"], "command": "color_scheme_unit_show_scope_name_and_styles" },
+    { "keys": ["ctrl+a"], "command": "color_scheme_unit_insert_assertions" },
+    { "keys": ["ctrl+f"], "command": "color_scheme_unit_insert_syntax_assertions" },
+]
+```
+
+Key bindings provided by default:
+>>>>>>> master
 
 Key | Description
 --- | -----------
