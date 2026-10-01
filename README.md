@@ -6,28 +6,11 @@ A testing framework for Sublime Text color schemes.
 
 ![ColorSchemeUnit](screenshot.png)
 
-## Setup
-
-Install [ColorSchemeUnit](https://packagecontrol.io/packages/ColorSchemeUnit) via Package Control.
-
-## Commands
-
-<<<<<<< HEAD
-Command | Description
-:------ |:-----------
-ColorSchemeUnit:&nbsp;Test&nbsp;Suite | Run test suite of the current file.
-ColorSchemeUnit:&nbsp;Test&nbsp;File | Run tests for the current file.
-ColorSchemeUnit:&nbsp;Show&nbsp;Styles | Show styles at the current cursor position.
-ColorSchemeUnit:&nbsp;Generate&nbsp;Assertions | Generates assertions at the current cursor position.
-
-## Key Bindings
-=======
-
 ## Installation
 
 ### By Package Control
 
-1. Download & Install **`Sublime Text 3`** (https://www.sublimetext.com/3)
+1. Download & Install **`Sublime Text 4`** (https://www.sublimetext.com/)
 1. Go to the menu **`Tools -> Install Package Control`**, then,
     wait few seconds until the installation finishes up
 1. Now,
@@ -81,42 +64,16 @@ See also:
 1. [ITE - Integrated Toolset Environment](https://github.com/evandrocoan/ITE)
 1. [Package control docs](https://packagecontrol.io/docs/usage) for details.
 
+## Commands
 
-## COMMANDS
+Command | Description
+:------ |:-----------
+ColorSchemeUnit:&nbsp;Test&nbsp;Suite | Run test suite of the current file.
+ColorSchemeUnit:&nbsp;Test&nbsp;File | Run tests for the current file.
+ColorSchemeUnit:&nbsp;Show&nbsp;Styles | Show styles at the current cursor position.
+ColorSchemeUnit:&nbsp;Generate&nbsp;Assertions | Generates assertions at the current cursor position.
 
-*The [Test](https://github.com/gerardroche/sublime-test) plugin is recommended to unify testing commands and keymaps.*
-
-Command Palette | Command | Description
---------------- | ------- | -----------
-`:TestSuite` | `color_scheme_unit_test_suite` | Run test suite of the current file.
-`:TestFile` | `color_scheme_unit_test_file` | Run tests for the current file.
-`:TestResults` | `color_scheme_unit_test_results` | Show the test results panel.
-`:ShowScopeAndColors` | `color_scheme_unit_show_scope_name_and_styles` | Show the scope name and applied colors of scheme at point under cursor.
-`:InsertAssertions` | `color_scheme_unit_insert_assertions` | Inserts assertions for the current line.
-`:InsertSyntaxAssertions` | `color_scheme_unit_insert_syntax_assertions` | Inserts syntax assertions for the current line.
-
-
-## KEY BINDINGS
-
-*The [Test](https://github.com/gerardroche/sublime-test) plugin is recommended to unify testing commands and keymaps.*
-
-Add your preferred key bindings:
-
-`Menu > Preferences > Key Bindings`
-
-```json
-[
-    { "keys": ["ctrl+shift+a"], "command": "color_scheme_unit_test_suite" },
-    { "keys": ["ctrl+shift+f"], "command": "color_scheme_unit_test_file" },
-    { "keys": ["ctrl+shift+r"], "command": "color_scheme_unit_test_results" },
-    { "keys": ["ctrl+shift+alt+p"], "command": "color_scheme_unit_show_scope_name_and_styles" },
-    { "keys": ["ctrl+a"], "command": "color_scheme_unit_insert_assertions" },
-    { "keys": ["ctrl+f"], "command": "color_scheme_unit_insert_syntax_assertions" },
-]
-```
-
-Key bindings provided by default:
->>>>>>> master
+## Key Bindings
 
 Key | Description
 --- | -----------
