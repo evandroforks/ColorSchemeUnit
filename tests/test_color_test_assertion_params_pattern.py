@@ -19,11 +19,11 @@ class TestColorTestAssertionParamsPattern(TestCase):
         match = _parse_assertion(string)
 
         self.assertTrue(match)
-        self.assertEquals(expected['repeat'], match['repeat'])
-        self.assertEquals(expected['fg'], match['fg'])
-        self.assertEquals(expected['bg'], match['bg'])
-        self.assertEquals(expected['fs'], match['fs'])
-        self.assertEquals(expected['build'], match['build'])
+        self.assertEqual(expected['repeat'], match['repeat'])
+        self.assertEqual(expected['fg'], match['fg'])
+        self.assertEqual(expected['bg'], match['bg'])
+        self.assertEqual(expected['fs'], match['fs'])
+        self.assertEqual(expected['build'], match['build'])
 
     def test_invalid(self):
         self.assertIsNone(_parse_assertion(''))

@@ -19,24 +19,24 @@ class TestColorTestParamsPattern(TestCase):
     def test_valid(self):
         match = pattern.match('COLOR SCHEME TEST "x" "y"')
         self.assertTrue(match)
-        self.assertEquals('x', match.group('color_scheme'))
-        self.assertEquals('y', match.group('syntax_name'))
-        self.assertEquals(match.group(0), 'COLOR SCHEME TEST "x" "y"')
+        self.assertEqual('x', match.group('color_scheme'))
+        self.assertEqual('y', match.group('syntax_name'))
+        self.assertEqual(match.group(0), 'COLOR SCHEME TEST "x" "y"')
 
     def test_allow_skipping_syntax_if_not_found(self):
         match = pattern.match('COLOR SCHEME TEST "x" SKIP IF NOT "y"')
         self.assertTrue(match)
-        self.assertEquals('x', match.group('color_scheme'))
-        self.assertEquals(' SKIP IF NOT', match.group('skip_if_not_syntax'))
-        self.assertEquals('y', match.group('syntax_name'))
-        self.assertEquals(match.group(0), 'COLOR SCHEME TEST "x" SKIP IF NOT "y"')
+        self.assertEqual('x', match.group('color_scheme'))
+        self.assertEqual(' SKIP IF NOT', match.group('skip_if_not_syntax'))
+        self.assertEqual('y', match.group('syntax_name'))
+        self.assertEqual(match.group(0), 'COLOR SCHEME TEST "x" SKIP IF NOT "y"')
 
     def test_allows_syntax_to_be_auto_detected(self):
         match = pattern.match('COLOR SCHEME TEST "x"')
         self.assertTrue(match)
-        self.assertEquals('x', match.group('color_scheme'))
+        self.assertEqual('x', match.group('color_scheme'))
         self.assertIsNone(match.group('syntax_name'))
-        self.assertEquals(match.group(0), 'COLOR SCHEME TEST "x"')
+        self.assertEqual(match.group(0), 'COLOR SCHEME TEST "x"')
 
     def test_valid_using_comments(self):
         comments = [  # start_comment, end_comment
@@ -57,11 +57,11 @@ class TestColorTestParamsPattern(TestCase):
         for start_comment, end_comment in comments:
             match = pattern.match(start_comment + 'COLOR SCHEME TEST "x" "y"' + end_comment)
             self.assertTrue(match)
-            self.assertEquals('x', match.group('color_scheme'))
-            self.assertEquals('y', match.group('syntax_name'))
-            self.assertEquals(match.group(0), start_comment + 'COLOR SCHEME TEST "x" "y"' + end_comment)
+            self.assertEqual('x', match.group('color_scheme'))
+            self.assertEqual('y', match.group('syntax_name'))
+            self.assertEqual(match.group(0), start_comment + 'COLOR SCHEME TEST "x" "y"' + end_comment)
 
     def test_doesnt_include_trailing_whitespace(self):
         match = pattern.match('COLOR SCHEME TEST "x" "y"        ')
         self.assertTrue(match)
-        self.assertEquals(match.group(0), 'COLOR SCHEME TEST "x" "y"')
+        self.assertEqual(match.group(0), 'COLOR SCHEME TEST "x" "y"')

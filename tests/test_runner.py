@@ -37,7 +37,7 @@ class TestRunner(unittest.ViewTestCase):
         return result
 
     def assertOutput(self, expected: str) -> None:
-        self.assertEquals(expected, self.output.view.substr(sublime.Region(0, self.output.view.size())))
+        self.assertEqual(expected, self.output.view.substr(sublime.Region(0, self.output.view.size())))
 
     def resolveTestFile(self, test) -> str:
         return os.path.join(os.path.dirname(sublime.packages_path()), test)
@@ -46,7 +46,7 @@ class TestRunner(unittest.ViewTestCase):
         test = 'Packages/ColorSchemeUnit/tests/fixtures/test.php'
         result = self.runTest(test)
 
-        self.assertEquals({
+        self.assertEqual({
             'skip': {},
             'error': {},
             'failures': [

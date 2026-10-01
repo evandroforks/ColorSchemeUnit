@@ -17,7 +17,7 @@ def load_color_scheme_resource(color_scheme):
     resource = load_resource(color_scheme)
 
     if not is_new_scheme(color_scheme):
-        return plistlib.readPlistFromBytes(bytes(resource, 'UTF-8'))
+        return plistlib.loads(resource.encode('UTF-8'))
 
     return sublime.decode_value(resource)
 

@@ -25,13 +25,13 @@ class TestLoadColorSchemeResource(unittest.ViewTestCase):
     def assertIsColorScheme(self, name, resource):
         self.assertTrue(isinstance(resource, dict))
         self.assertTrue('name' in resource)
-        self.assertEquals(resource['name'], name)
+        self.assertEqual(resource['name'], name)
 
 
 class TestViewStyle(unittest.ViewTestCase):
 
     def test_can_load(self):
-        self.assertEquals(ViewStyle(self.view).view, self.view)
+        self.assertEqual(ViewStyle(self.view).view, self.view)
 
     def test_at_point(self):
         with self.loadColorScheme('ColorSchemeUnitTest.hidden-color-scheme'):
@@ -39,36 +39,36 @@ class TestViewStyle(unittest.ViewTestCase):
             style = ViewStyle(self.view)
 
             s = style.at_point(0)
-            self.assertEquals('#111111', s['background'])
-            self.assertEquals('#eeeeee', s['foreground'])
-            self.assertEquals('', s['fontStyle'])
+            self.assertEqual('#111111', s['background'])
+            self.assertEqual('#eeeeee', s['foreground'])
+            self.assertEqual('', s['fontStyle'])
 
             s = style.at_point(8)
-            self.assertEquals('#111111', s['background'])
-            self.assertEquals('#75715e', s['foreground'])
-            self.assertEquals('', s['fontStyle'])
+            self.assertEqual('#111111', s['background'])
+            self.assertEqual('#75715e', s['foreground'])
+            self.assertEqual('', s['fontStyle'])
 
             s = style.at_point(19)
-            self.assertEquals('#eeeeee', s['foreground'])
-            self.assertEquals('italic', s['fontStyle'])
+            self.assertEqual('#eeeeee', s['foreground'])
+            self.assertEqual('italic', s['fontStyle'])
 
             s = style.at_point(23)
-            self.assertEquals('#800080', s['foreground'])
-            self.assertEquals('', s['fontStyle'])
+            self.assertEqual('#800080', s['foreground'])
+            self.assertEqual('', s['fontStyle'])
 
             s = style.at_point(32)
-            self.assertEquals('#ff0000', s['foreground'])
-            self.assertEquals('bold', s['fontStyle'])
+            self.assertEqual('#ff0000', s['foreground'])
+            self.assertEqual('bold', s['fontStyle'])
 
             s = style.at_point(37)
-            self.assertEquals('#ffff00', s['foreground'])
-            self.assertEquals('bold italic', s['fontStyle'])
+            self.assertEqual('#ffff00', s['foreground'])
+            self.assertEqual('bold italic', s['fontStyle'])
 
     def test_at_point_legacy(self):
         with self.loadColorScheme('Packages/ColorSchemeUnit/tests/fixtures/ColorSchemeUnitLegacyTest.hidden-tmTheme'):
             s = ViewStyle(self.view).at_point(0)
-            self.assertEquals('#333333', s['background'])
-            self.assertEquals('#dddddd', s['foreground'])
+            self.assertEqual('#333333', s['background'])
+            self.assertEqual('#dddddd', s['foreground'])
 
 
 class TestColorSchemeResource(unittest.ViewTestCase):
