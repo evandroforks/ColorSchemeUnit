@@ -10,16 +10,16 @@ from sublime import set_timeout_async
 from sublime import status_message
 from sublime import version
 
-from .color_scheme import ViewStyle
-from .coverage import Coverage
-from .result import ResultPrinter
-from .test import TestOutputPanel
-from .test import TestView
+from ColorSchemeUnit.lib.color_scheme import ViewStyle
+from ColorSchemeUnit.lib.coverage import Coverage
+from ColorSchemeUnit.lib.result import ResultPrinter
+from ColorSchemeUnit.lib.test import TestOutputPanel
+from ColorSchemeUnit.lib.test import TestView
 
 
-__version__ = "1.10.0"
+__version__ = "2.2.1"
 
-__version_info__ = (1, 10, 0)
+__version_info__ = (2, 2, 1)
 
 _color_test_params_compiled_pattern = re.compile(
     '^(?:(?:\\<\\?php )?(?://|#|\\/\\*|\\<\\!--|--)\\s*)?'
@@ -27,14 +27,16 @@ _color_test_params_compiled_pattern = re.compile(
     '(?:(?P<skip_if_not_syntax> SKIP IF NOT)? "(?P<syntax_name>[^"]+)")?'
     '(?:\\s*(?:--\\>|\\?\\>|\\*\\/))?')
 
-_color_test_assertion_compiled_pattern = re.compile(
+_color_test_assertion = re.compile(
     '^\\s*(//|#|\\/\\*|\\<\\!--|--)\\s*'
-    '(?P<repeat>\\^+)'
-    '(?: fg=(?P<fg>[^ ]+)?)?'
-    '(?: bg=(?P<bg>[^ ]+)?)?'
-    '(?: fs=(?P<fs>[^=]*)?)?'
-    '(?: build\\>=(?P<build>[^=]*)?)?'
+    '(?P<repeat>\\^+)\\s+'
+    '(?P<assertions>.+)'
     '$')
+
+_color_test_assertion_fg = re.compile('fg=([^ ]+)')
+_color_test_assertion_bg = re.compile('bg=([^ ]+)')
+_color_test_assertion_fs = re.compile('fs=([a-z_]+ ?(?:[a-z_]+(?:$| ))*|\\s*)')
+_color_test_assertion_build = re.compile('build\\>=([0-9]+)')
 
 
 def message(msg):
@@ -43,22 +45,100 @@ def message(msg):
     print(msg)
 
 
+def _parse_assertion(line: str):
+    line = line.lower().rstrip(' -->').rstrip(' */')
+    match = _color_test_assertion.match(line)
+
+    if match:
+        assertion = {
+            'assertion': match.group(0),
+            'repeat': match.group('repeat')
+        }
+
+        fg = _color_test_assertion_fg.search(match.group('assertions'))
+        assertion['fg'] = fg.group(1) if fg else None
+
+        bg = _color_test_assertion_bg.search(match.group('assertions'))
+        assertion['bg'] = bg.group(1) if bg else None
+
+        fs = _color_test_assertion_fs.search(match.group('assertions'))
+        assertion['fs'] = fs.group(1).strip() if fs else None
+
+        build = _color_test_assertion_build.search(match.group('assertions'))
+        assertion['build'] = build.group(1) if build else None
+
+        return assertion
+
+
 def is_valid_color_scheme_test_file_name(file_name):
     if not file_name:
         return False
 
-    return bool(re.match('^color_scheme_test.*\\.[a-zA-Z0-9]+$', os.path.basename(file_name)))
+    return bool(re.match('^color_scheme_test.*\\.[a-zA-Z0-9-]+$', os.path.basename(file_name)))
 
 
-def get_color_scheme_test_params_color_scheme(view):
-    params = _color_test_params_compiled_pattern.match(view.substr(Region(0, view.size())))
-    if params:
-        return 'Packages/' + params.group('color_scheme')
+def get_color_scheme_test_params_from_view(view):
+    return get_color_scheme_test_params(view.substr(Region(0, view.size())))
 
 
-def run_color_scheme_test(test, window, result_printer, code_coverage):
-    skip = False
-    error = False
+def get_color_scheme_test_params(content: str, file_name=None):
+    test_params = _color_test_params_compiled_pattern.match(content)
+    if test_params:
+        syntax_name = test_params.group('syntax_name')
+        skip_if_not_syntax = test_params.group('skip_if_not_syntax')
+
+        if test_params.group('color_scheme').endswith('.sublime-color-scheme'):
+            color_scheme = test_params.group('color_scheme')
+            if '/' in color_scheme and not color_scheme.startswith('Packages'):
+                color_scheme = 'Packages/' + color_scheme
+        else:
+            color_scheme = 'Packages/' + test_params.group('color_scheme')
+
+        syntax_package_name = None
+        if not syntax_name and file_name is not None:
+            syntax_name = os.path.splitext(file_name)[1].lstrip('.').upper()
+        elif '/' in syntax_name:
+            syntax_package_name, syntax_name = syntax_name.split('/')
+
+        syntaxes = find_resources(syntax_name + '.sublime-syntax')
+        if not syntaxes:
+            syntaxes = find_resources(syntax_name + '.tmLanguage')
+            if not syntaxes:
+                syntaxes = find_resources(syntax_name + '.hidden-tmLanguage')
+
+        if syntax_package_name:
+            syntaxes = [s for s in syntaxes if syntax_package_name in s]
+
+        return {
+            'syntaxes': syntaxes,
+            'syntax': syntaxes[0] if syntaxes else None,
+            'syntax_name': syntax_name,
+            'skip_if_not_syntax': bool(skip_if_not_syntax),
+            'color_scheme': color_scheme
+        }
+
+    return None
+
+
+class ColorSchemeTest():
+
+    def __init__(self, test):
+        self.test = test
+        self.content = load_resource(self.test)
+        self.params = get_color_scheme_test_params(self.content, self.test)
+
+    def init_view(self, test_view):
+        test_view.view.assign_syntax(self.params['syntax'])
+        test_view.view.settings().set('color_scheme', self.params['color_scheme'])
+        test_view.set_content(self.content)
+
+    def get_lines(self):
+        return enumerate(self.content.splitlines())
+
+
+def run_color_scheme_test(test, window, result_printer: ResultPrinter, code_coverage: Coverage):
+    skip = {}  # type: dict
+    error = {}  # type: dict
     failures = []
     assertion_count = 0
 
@@ -66,44 +146,42 @@ def run_color_scheme_test(test, window, result_printer, code_coverage):
     test_view.setUp()
 
     try:
-        test_content = load_resource(test)
 
-        color_test_params = _color_test_params_compiled_pattern.match(test_content)
-        if not color_test_params:
-            error = {'message': 'Invalid COLOR SCHEME TEST header', 'file': test_view.file_name(), 'row': 0, 'col': 0}
-            raise RuntimeError(error['message'])
+        color_scheme_test = ColorSchemeTest(test)
 
-        syntax_package_name = None
-        syntax = color_test_params.group('syntax_name')
-        if not syntax:
-            syntax = os.path.splitext(test)[1].lstrip('.').upper()
-        elif '/' in syntax:
-            syntax_package_name, syntax = syntax.split('/')
+        if not color_scheme_test.params:
+            err_msg = 'Invalid COLOR SCHEME TEST header'
+            error['message'] = err_msg
+            error['file'] = test_view.file_name()
+            error['row'] = 0
+            error['col'] = 0
+            raise RuntimeError(err_msg)
 
-        syntaxes = find_resources(syntax + '.sublime-syntax')
-        if not syntaxes:
-            syntaxes = find_resources(syntax + '.tmLanguage')
-            if not syntaxes:
-                syntaxes = find_resources(syntax + '.hidden-tmLanguage')
+        if len(color_scheme_test.params['syntaxes']) > 1:
+            err_msg = 'More than one syntax found: {}'.format(color_scheme_test.params['syntaxes'])
+            error['message'] = err_msg
+            error['file'] = test_view.file_name()
+            error['row'] = 0
+            error['col'] = 0
+            raise RuntimeError(err_msg)
 
-        if syntax_package_name:
-            syntaxes = [s for s in syntaxes if syntax_package_name in s]
-
-        if len(syntaxes) > 1:
-            error = {'message': 'More than one syntax found: {}'.format(syntaxes), 'file': test_view.file_name(), 'row': 0, 'col': 0}  # noqa: E501
-            raise RuntimeError(error['message'])
-
-        if len(syntaxes) != 1:
-            if color_test_params.group('skip_if_not_syntax'):
-                skip = {'message': 'Syntax not found: {}'.format(syntax), 'file': test_view.file_name(), 'row': 0, 'col': 0}  # noqa: E501
-                raise RuntimeError(error['message'])
+        if len(color_scheme_test.params['syntaxes']) != 1:
+            if color_scheme_test.params['skip_if_not_syntax']:
+                err_msg = 'Syntax not found: {}'.format(color_scheme_test.params['syntax_name'])
+                skip['message'] = err_msg
+                skip['file'] = test_view.file_name()
+                skip['row'] = 0
+                skip['col'] = 0
+                raise RuntimeError(err_msg)
             else:
-                error = {'message': 'Syntax not found: {}'.format(syntax), 'file': test_view.file_name(), 'row': 0, 'col': 0}  # noqa: E501
-                raise RuntimeError(error['message'])
+                err_msg = 'Syntax not found: {}'.format(color_scheme_test.params['syntax_name'])
+                error['message'] = err_msg
+                error['file'] = test_view.file_name()
+                error['row'] = 0
+                error['col'] = 0
+                raise RuntimeError(err_msg)
 
-        test_view.view.assign_syntax(syntaxes[0])
-        test_view.view.settings().set('color_scheme', 'Packages/' + color_test_params.group('color_scheme'))
-        test_view.set_content(test_content)
+        color_scheme_test.init_view(test_view)
 
         color_scheme_style = ViewStyle(test_view.view)
 
@@ -114,27 +192,27 @@ def run_color_scheme_test(test, window, result_printer, code_coverage):
         code_coverage.on_test_start(test, test_view)
 
         consecutive_test_lines = 0
-        has_failed_assertion = False
-        for line_number, line in enumerate(test_content.splitlines()):
-            assertion_params = _color_test_assertion_compiled_pattern.match(line.lower().rstrip(' -->').rstrip(' */'))
+        for line_number, line in color_scheme_test.get_lines():
+            has_failed_assertion = False
+            assertion_params = _parse_assertion(line)
             if not assertion_params:
                 consecutive_test_lines = 0
                 continue
 
             consecutive_test_lines += 1
 
-            requires_build = assertion_params.group('build')
+            requires_build = assertion_params['build']
             if requires_build:
                 if int(version()) < int(requires_build):
                     continue
 
             assertion_row = line_number - consecutive_test_lines
             assertion_begin = line.find('^')
-            assertion_repeat = assertion_params.group('repeat')
+            assertion_repeat = assertion_params['repeat']
             assertion_end = assertion_begin + len(assertion_repeat)
-            assertion_fg = assertion_params.group('fg')
-            assertion_bg = assertion_params.group('bg')
-            assertion_fs = assertion_params.group('fs')
+            assertion_fg = assertion_params['fg']
+            assertion_bg = assertion_params['bg']
+            assertion_fs = assertion_params['fs']
 
             expected = {}
 
@@ -163,10 +241,13 @@ def run_color_scheme_test(test, window, result_printer, code_coverage):
                     else:
                         actual[style] = ''
 
+                if 'fontStyle' in actual and actual['fontStyle'] == 'none':
+                    actual['fontStyle'] = ''
+
                 if actual != expected:
                     has_failed_assertion = True
                     failures.append({
-                        'assertion': assertion_params.group(0),
+                        'assertion': assertion_params['assertion'],
                         'file': test_view.file_name(),
                         'row': assertion_row + 1,
                         'col': col + 1,
@@ -180,14 +261,12 @@ def run_color_scheme_test(test, window, result_printer, code_coverage):
                 result_printer.on_test_success()
 
     except Exception as e:
-        if not error and not skip:
-            result_printer.output.write("\nAn error occurred: %s\n" % str(e))
-
         if error:
             result_printer.addError(test, test_view)
-
-        if skip:
+        elif skip:
             result_printer.addSkippedTest(test, test_view)
+        else:
+            result_printer.addException(e)
 
     finally:
         test_view.tearDown()
@@ -224,13 +303,14 @@ class ColorSchemeUnit():
     def results(self):
         self.window.run_command('show_panel', {'panel': 'output.color_scheme_unit'})
 
-    def run(self, package=None, file=None, output=None, async=True):
-        if async:
+    def run(self, package=None, file=None, output=None, **kwargs):
+        is_async = kwargs.get('async', True)
+        if is_async:
             set_timeout_async(lambda: self._run(package, file, output), 100)
         else:
-            return self._run(package, file, output, async)
+            return self._run(package, file, output, is_async=is_async)
 
-    def _run(self, package=None, file=None, output=None, async=True):
+    def _run(self, package=None, file=None, output=None, is_async=True):
         if package and file:
             raise TypeError('package or file, but not both')
 
@@ -267,7 +347,7 @@ class ColorSchemeUnit():
             return message('ColorSchemeUnit: no tests found; be sure run tests from within the packages directory')
 
         if not output:
-            output = TestOutputPanel('color_scheme_unit', self.window)
+            output = TestOutputPanel(self.window)
 
         output.write("ColorSchemeUnit %s\n\n" % __version__)
         output.write("Runtime: %s build %s\n" % (platform(), version()))
@@ -279,11 +359,11 @@ class ColorSchemeUnit():
         output.write("\n")
 
         result_printer = ResultPrinter(output, debug=self.view.settings().get('color_scheme_unit.debug'))
-        code_coverage = Coverage(output, self.view.settings().get('color_scheme_unit.coverage'), file)
+        code_coverage = Coverage(output, enabled=self.view.settings().get('color_scheme_unit.coverage'), is_single_file=bool(file))  # noqa: E501
 
-        skipped = []
-        errors = []
-        failures = []
+        skipped = []  # type: list
+        errors = []  # type: list
+        failures = []  # type: list
         total_assertions = 0
 
         result_printer.on_tests_start(tests)
@@ -302,7 +382,7 @@ class ColorSchemeUnit():
         if not errors and not failures:
             code_coverage.on_tests_end()
 
-        if unittesting and async:
+        if unittesting and is_async:
             if errors or failures:
                 output.write('\n')
                 output.write("FAILED.\n")

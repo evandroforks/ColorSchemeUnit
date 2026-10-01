@@ -1,4 +1,4 @@
-from .color_scheme import ViewStyle
+from ColorSchemeUnit.lib.color_scheme import ViewStyle
 
 
 def generate_color_scheme_assertions(view, pt):
@@ -17,18 +17,6 @@ def generate_color_scheme_assertions(view, pt):
             styles.append('fg={} fs={}'.format(style['foreground'], style['fontStyle']))
 
     return _generate_assertions(styles, view, pt)
-
-
-def generate_syntax_assertions(view, pt):
-    line = view.line(pt)
-
-    scopes = []
-    for i in range(line.begin(), line.end()):
-        # scope_name() needs to striped due to a bug in ST:
-        # See https://github.com/SublimeTextIssues/Core/issues/657.
-        scopes.append(view.scope_name(i).rstrip(' '))
-
-    return _generate_assertions(scopes, view, pt)
 
 
 def _generate_assertions(items, view, pt):
